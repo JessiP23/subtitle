@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Transcriber and Styler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Video or Enter YouTube URL</h1>
+    <form id="videoForm" action="/upload" method="POST">
+        <div class="form-group">
+            <label for="videoURL">Or Enter YouTube URL:</label>
+            <input type="text" id="url" name="url" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+            <label for="textColor">Overlay Text Color:</label>
+            <input type="color" id="textColor" name="textColor" value="#FFFFFF">
+        </div>
+        <div class="form-group">
+            <label for="fontSize">Font Size:</label>
+            <input type="number" id="fontSize" name="fontSize" min="10" max="100" value="36">
+        </div>
+        <div class="form-group">
+            <label for="fontType">Font Type:</label>
+            <input type="text" id="fontType" name="fontType" placeholder="Arial">
+        </div>
+        <div class="form-group">
+            <label for="xPosition">X Position (1-100):</label>
+            <input type="number" id="xPosition" name="xPosition" min="1" max="100" value="50">
+        </div>
+        <div class="form-group">
+            <label for="yPosition">Y Position (1-100):</label>
+            <input type="number" id="yPosition" name="yPosition" min="1" max="100" value="80">
+        </div>
+        <button type="submit">Upload and Process Video</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('videoForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const url = document.getElementById('url').value;
+    const textColor = document.getElementById('textColor').value;
+    const fontSize = document.getElementById('fontSize').value;
+    const fontType = document.getElementById('fontType').value;
+    const xPosition = document.getElementById('xPosition').value;
+    const yPosition = document.getElementById('yPosition').value;
+
+    const data = {
+        url,
+        textColor,
+        fontSize,
+        fontType,
+        xPosition,
+        yPosition
+    };
+
+    fetch('http://127.0.0.1:5000/upload', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              document.getElementById('result').innerHTML = `
+                  <p>Video processed successfully!</p>
+                  <p>Download the processed video <a href="/download/${data.outputVideo}" download>here</a>.</p>
+              `;
+          } else {
+              document.getElementById('result').innerHTML = `<p>Error: ${data.message}</p>`;
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          document.getElementById('result').innerHTML = `<p>An error occurred while processing the video.</p>`;
+      });
+});
+    </script>
+</body>
+</html>
