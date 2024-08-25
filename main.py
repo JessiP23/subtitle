@@ -61,17 +61,9 @@ def summarize_transcription(segments):
         summary += f"{segment.text}\n"
     return summary
 
-def add_overlay_text(input_file, segments, text_color):
-    import os
+def add_overlay_text(input_file, segments, text_color, font_size, font_type, x_position, y_position):
     from pathlib import Path
     import ffmpeg
-
-    # Define font settings (you can customize these)
-    font = "Arial"  # Use a common system font
-    font_size = 36
-    font_color = "yellow"
-    x_position = "(w-tw)/2"
-    y_position = "h-(h*0.2)"  # Positioning text near the bottom
 
     # Start with the input stream
     input_stream = ffmpeg.input(input_file)
@@ -87,9 +79,8 @@ def add_overlay_text(input_file, segments, text_color):
             x=x_position,
             y=y_position,
             fontsize=font_size,
-            # use the text_color paramter to set the color for the transcribed data
             fontcolor=text_color,
-            font=font,
+            font=font_type,
             enable=f'between(t,{start_time},{end_time})'
         )
     
@@ -105,8 +96,6 @@ def add_overlay_text(input_file, segments, text_color):
         error_message = e.stderr.decode() if e.stderr else str(e)
         print(f"FFmpeg error: {error_message}")
         raise e
-
-
 
 def add_subtitle_to_video(input_file, subtitle_file, subtitle_language):
     output_video = f"output-{input_file}-{subtitle_language}.mp4"
@@ -145,7 +134,6 @@ def save_summary_file(summary):
         raise e
     return summary_file
 
-
 def getURL():
     url = URL_entry.get()
     if not url:
@@ -166,12 +154,15 @@ def getURL():
             language, segments = transcribe_audio(audio_extract)
             print("Language and segments retrieved successfully!")
             
-            # update color based on input of user
+            # Retrieve customization options
             selected_color = color_combobox.get()
+            font_size = font_size_entry.get() or "36"  # Default size is 36
+            font_type = font_type_entry.get() or "Arial"  # Default font is Arial
+            x_position = x_position_entry.get() or "(w-tw)/2"  # Default position is centered
+            y_position = y_position_entry.get() or "h-(h*0.2)"  # Default position is near the bottom
             
-
-            # Generate overlayed video with subtitles
-            overlayed_video = add_overlay_text(video_file, segments, selected_color)
+            # Generate overlayed video with subtitles using custom options
+            overlayed_video = add_overlay_text(video_file, segments, selected_color, font_size, font_type, x_position, y_position)
             print("Overlayed video created successfully!")
 
             messagebox.showinfo("Success", "Transcription and subtitle process completed successfully!")
@@ -202,6 +193,30 @@ color_label.pack(pady=10)
 
 color_combobox = ttk.Combobox(root, values=["Yellow", "Green", "Red", "Black", "Purple"])
 color_combobox.pack(pady=10)
+
+
+# Font size input
+font_size_label = tk.Label(root, text="Select Font Size:")
+font_size_label.pack(pady=10)
+font_size_entry = tk.Entry(root)
+font_size_entry.pack(pady=10)
+
+# Font type input
+font_type_label = tk.Label(root, text="Enter Font Type (e.g., Arial, Times New Roman):")
+font_type_label.pack(pady=10)
+font_type_entry = tk.Entry(root)
+font_type_entry.pack(pady=10)
+
+# Font position inputs (X and Y positions)
+x_position_label = tk.Label(root, text="Enter X Position (e.g., '(w-tw)/2' for center):")
+x_position_label.pack(pady=10)
+x_position_entry = tk.Entry(root)
+x_position_entry.pack(pady=10)
+
+y_position_label = tk.Label(root, text="Enter Y Position (e.g., 'h-(h*0.2)' for near bottom):")
+y_position_label.pack(pady=10)
+y_position_entry = tk.Entry(root)
+y_position_entry.pack(pady=10)
 
 # Creates a button that calls the function
 run_button = tk.Button(root, text="Transcribe Video!", command=getURL)
