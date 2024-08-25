@@ -10,6 +10,8 @@ import subprocess
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+
+# get the audio file from the youtube video
 def extract_audio(input_file):
     print(f"Extracting audio from {input_file}...")
     extracted_audio = f"audio-{input_file}.wav"
@@ -22,6 +24,8 @@ def extract_audio(input_file):
         raise e
     return extracted_audio
 
+
+# get the transcription text in time segments
 def transcribe_audio(audio):
     model = WhisperModel("small", device="cpu")
     segments, info = model.transcribe(audio)
@@ -31,6 +35,8 @@ def transcribe_audio(audio):
         print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
     return language, segments
 
+
+# format of time in the video
 def convert_to_SRT(seconds):
     seconds = math.floor(seconds)
     hours = seconds // 3600
@@ -39,6 +45,8 @@ def convert_to_SRT(seconds):
     seconds = seconds - 60 * minutes
     return f"{hours:02}:{minutes:02}:{seconds:02},000"
 
+
+# subtitle generation to prepare for video
 def generate_subtitle_file(input_file, language, segments):
     subtitle_file = f"sub-{input_file}.{language}.srt"
     text = ""
@@ -54,35 +62,50 @@ def generate_subtitle_file(input_file, language, segments):
         f.write(text)
     return subtitle_file
 
+# summarizing transcription 
+# pending
 def summarize_transcription(segments):
     summary = "Summary of the transcription:\n\n"
     for segment in segments:
         summary += f"{segment.text}\n"
     return summary
 
+
+# overlaying subtitle text that is gonna be added to the video
 def add_overlay_text(input_file, segments):
     import os
     from pathlib import Path
     import ffmpeg
 
-    # Define font settings (you can customize these)
-    font = "Arial"  # Use a common system font
+    # font designs
+    # approach 1: drawtext does not work for larger or smaller videos
+    # approach 2: ass ffmpeg does not work
+    # aproach 3: 
+    font = "Arial" 
     font_size = 36
     font_color = "yellow"
     x_position = "(w-tw)/2"
-    y_position = "h-(h*0.2)"  # Positioning text near the bottom
+    y_position = "h-(h*0.2)"  
 
-    # Start with the input stream
     input_stream = ffmpeg.input(input_file)
     
     # Apply filters for each segment
     filter_chain = input_stream.video
+    
+    # iterate over segments that contain text
     for segment in segments:
+        # get the start and end time of each segment
         start_time = segment.start
         end_time = segment.end
-        text = segment.text.replace("'", "\\'")  # Escape single quotes
+        
+        # the single quotes are avoided to according to FFmpeg documentation
+        text = segment.text.replace("'", "\\'")  
+        
+        # Text overlay to the video stream at the corresponding times
         filter_chain = filter_chain.drawtext(
+            # text to be displayed
             text=text,
+            # position
             x=x_position,
             y=y_position,
             fontsize=font_size,
@@ -96,8 +119,11 @@ def add_overlay_text(input_file, segments):
 
     # Combine video and audio and output
     try:
+        # Process the video and audio
         ffmpeg.output(filter_chain, input_stream.audio, output_file).run(overwrite_output=True)
+        # debugging
         print(f"Overlay video created successfully: {output_file}")
+        # path of output file
         return output_file
     except ffmpeg.Error as e:
         error_message = e.stderr.decode() if e.stderr else str(e)
@@ -116,6 +142,8 @@ def add_subtitle_to_video(input_file, subtitle_file, subtitle_language):
         print(f"FFmpeg error: {error_message}")
         raise e
 
+
+# pending summarization of transcribing text
 def add_summary_to_video(input_file, summary):
     summary_file = f"summary-{input_file}"
     try:
