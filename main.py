@@ -1,15 +1,23 @@
-import tkinter as tk
 from tkinter import messagebox as messagebox
 from tkinter import ttk
 import ffmpeg 
 import os
+import tkinter as tk
 import pytubefix as pytube
 from faster_whisper import WhisperModel
 import math
 import shlex
 import subprocess
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 
+
+app = Flask(__name__)
+CORS(app)
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+
+
 
 def extract_audio(input_file):
     print(f"Extracting audio from {input_file}...")
@@ -28,8 +36,9 @@ def transcribe_audio(audio):
     segments, info = model.transcribe(audio)
     language = info[0]
     segments = list(segments)
-    for segment in segments:
-        print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+    # debugging
+    # for segment in segments:
+    #     print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
     return language, segments
 
 def convert_to_SRT(seconds):
@@ -112,6 +121,42 @@ def add_subtitle_to_video(input_file, subtitle_file, subtitle_language):
         error_message = e.stderr.decode() if e.stderr else str(e)
         print(f"FFmpeg error: {error_message}")
         raise e
+    
+@app.route('/upload', methods=['POST'])
+def upload_video():
+    data = request.json
+    url = data['url']
+    text_color = data['textColor']
+    font_size = data['fontSize']
+    font_type = data['fontType']
+    x_position = data['xPosition']
+    y_position = data['yPosition']
+
+    # Process the URL
+    try:
+        yt_video = pytube.YouTube(url)
+        stream = yt_video.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+        if stream:
+            working_directory = os.getcwd()
+            stream.download(output_path=working_directory)
+            video_file = stream.default_filename
+
+            audio_extract = extract_audio(video_file)
+            language, segments = transcribe_audio(audio_extract)
+            subtitle_file = generate_subtitle_file(video_file, language, segments)
+            overlayed_video = add_overlay_text(video_file, segments, text_color, font_size, font_type, x_position, y_position)
+            output_video = add_subtitle_to_video(video_file, subtitle_file, language)
+
+            return send_file(overlayed_video, as_attachment=True)
+        else:
+            return jsonify({"error": "No video stream found for download"}), 400
+    except KeyError as e:
+        return jsonify({"error": f"Missing Key: {e}"}), 400
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {e}"}), 400
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 def add_summary_to_video(input_file, summary):
     summary_file = f"summary-{input_file}"
