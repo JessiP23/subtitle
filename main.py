@@ -74,10 +74,15 @@ def add_overlay_text(input_file, segments, text_color, font_size, font_type, x_p
         start_time = segment.start
         end_time = segment.end
         text = segment.text.replace("'", "\\'")  # Escape single quotes
+        
+        # Calculate X and Y positions based on input numbers
+        x_pos = f"(w-tw)/{x_position}"  # Centered horizontally
+        y_pos = f"h-(h*{y_position}/100)"  # Position from bottom
+        
         filter_chain = filter_chain.drawtext(
             text=text,
-            x=x_position,
-            y=y_position,
+            x=x_pos,
+            y=y_pos,
             fontsize=font_size,
             fontcolor=text_color,
             font=font_type,
@@ -96,6 +101,7 @@ def add_overlay_text(input_file, segments, text_color, font_size, font_type, x_p
         error_message = e.stderr.decode() if e.stderr else str(e)
         print(f"FFmpeg error: {error_message}")
         raise e
+
 
 def add_subtitle_to_video(input_file, subtitle_file, subtitle_language):
     output_video = f"output-{input_file}-{subtitle_language}.mp4"
@@ -208,14 +214,14 @@ font_type_entry = tk.Entry(root)
 font_type_entry.pack(pady=10)
 
 # Font position inputs (X and Y positions)
-x_position_label = tk.Label(root, text="Enter X Position (e.g., '(w-tw)/2' for center):")
+x_position_label = tk.Label(root, text="Enter X Position (1-100):")
 x_position_label.pack(pady=10)
-x_position_entry = tk.Entry(root)
+x_position_entry = tk.Spinbox(root, from_=1, to=100, width=5)
 x_position_entry.pack(pady=10)
 
-y_position_label = tk.Label(root, text="Enter Y Position (e.g., 'h-(h*0.2)' for near bottom):")
+y_position_label = tk.Label(root, text="Enter Y Position (1-100):")
 y_position_label.pack(pady=10)
-y_position_entry = tk.Entry(root)
+y_position_entry = tk.Spinbox(root, from_=1, to=100, width=5)
 y_position_entry.pack(pady=10)
 
 # Creates a button that calls the function
