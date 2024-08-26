@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 
 const VideoOverlayForm = () => {
   const [url, setUrl] = useState('');
@@ -11,6 +12,8 @@ const VideoOverlayForm = () => {
   const [yPosition, setYPosition] = useState('80');
   const [videoUrl, setVideoUrl] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState(null);
+  const [isVideoGenerated, setIsVideoGenerated] = useState(false); // Track if video is generated
+  const router = useRouter(); // Initialize useRouter
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,9 +32,14 @@ const VideoOverlayForm = () => {
       const videoUrl = URL.createObjectURL(videoBlob);
       setVideoUrl(videoUrl);
       setDownloadUrl(videoUrl);
+      setIsVideoGenerated(true); // Set video generated flag
     } catch (error) {
       console.error('Error uploading video:', error);
     }
+  };
+
+  const handleDone = () => {
+    router.push('/'); // Navigate to home page
   };
 
   return (
@@ -134,8 +142,23 @@ const VideoOverlayForm = () => {
           >
             Download Video
           </a>
+          <button 
+            onClick={handleDone} 
+            className="mt-4 py-2 px-4 bg-red-500 text-white font-bold rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            I'm Done
+          </button>
         </div>
       )}
+      
+      <div className="mt-8 text-center">
+        <a 
+          href="/" 
+          className="inline-block py-2 px-4 bg-gray-600 text-white font-bold rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+        >
+          Go Back to Home Page
+        </a>
+      </div>
     </div>
   );
 };
