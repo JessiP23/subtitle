@@ -12,7 +12,6 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 
-# intializing flask for backend connection with the frontend
 app = Flask(__name__)
 CORS(app)
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -20,7 +19,6 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 
-# get audio from the original video
 def extract_audio(input_file):
     print(f"Extracting audio from {input_file}...")
     extracted_audio = f"audio-{input_file}.wav"
@@ -32,8 +30,6 @@ def extract_audio(input_file):
         print(f"FFmpeg error: {error_message}")
         raise e
     return extracted_audio
-
-
 
 def transcribe_audio(audio):
     model = WhisperModel("small", device="cpu")
