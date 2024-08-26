@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation'; // Import useRouter for navigation
@@ -13,6 +13,8 @@ const VideoOverlayForm = () => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [isVideoGenerated, setIsVideoGenerated] = useState(false); // Track if video is generated
+  const [applyAnimations, setApplyAnimations] = useState(false); // New state for animations
+  const [animationType, setAnimationType] = useState('fade_in'); // New state for animation type
   const router = useRouter(); // Initialize useRouter
 
   const handleSubmit = async (e) => {
@@ -26,6 +28,8 @@ const VideoOverlayForm = () => {
         fontType,
         xPosition,
         yPosition,
+        applyAnimations,
+        animationType
       }, { responseType: 'blob' });
 
       const videoBlob = new Blob([response.data], { type: 'video/mp4' });
@@ -119,6 +123,34 @@ const VideoOverlayForm = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-blue-600"
           />
         </label>
+
+        <label className="block">
+          <span className="text-gray-700">Apply Animations:</span>
+          <input
+            type="checkbox"
+            checked={applyAnimations}
+            onChange={(e) => setApplyAnimations(e.target.checked)}
+            className="mt-1"
+          />
+        </label>
+
+        {applyAnimations && (
+          <label className="block">
+            <span className="text-gray-700">Animation Type:</span>
+            <select
+              value={animationType}
+              onChange={(e) => setAnimationType(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-blue-600"
+            >
+              <option value="fade_in">Fade In</option>
+              <option value="fade_out">Fade Out</option>
+              <option value="scroll">Scroll</option>
+              <option value="zoom">Zoom</option>
+              <option value="bounce">Bounce</option>
+              <option value="typewriter">Typewriter</option>
+            </select>
+          </label>
+        )}
 
         <button 
           type="submit" 
