@@ -77,13 +77,17 @@ const VideoOverlayForm = () => {
 
         <label className="block">
           <span className="text-gray-700">Font Type:</span>
-          <input 
-            type="text" 
+          <select 
             value={fontType} 
             onChange={(e) => setFontType(e.target.value)} 
-            required 
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-blue-600"
-          />
+          >
+            <option value="Arial">Arial</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+          </select>
         </label>
 
         <label className="block">
